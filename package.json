@@ -4,7 +4,8 @@
   "description": "This uses Pupeteer to automatically put through a set of test transactions through the dev support site.",
   "main": "run.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start" : "node run.js"
   },
   "author": "Ian James, https://github.com/injms",
   "license": "UNLICENSED",
