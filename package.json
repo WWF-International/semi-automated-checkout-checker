@@ -1,0 +1,17 @@
+{
+  "name": "automatic-donation-scenario-makr",
+  "version": "1.0.0",
+  "description": "This uses Pupeteer to automatically put through a set of test transactions through the dev support site.",
+  "main": "run.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Ian James, https://github.com/injms",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "chalk": "^2.3.0",
+    "json2csv": "^3.11.5",
+    "promisify-node": "^0.4.0",
+    "puppeteer": "^0.12.0"
+  }
+}
