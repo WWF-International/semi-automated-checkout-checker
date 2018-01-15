@@ -80,49 +80,64 @@ const runScenario = (url, scenario) => {
         await page.type('input[name="other_amount_oneOff"]', scenario.amount.toString() ); // Needs to be a string here; can be either integer or string in tests JSON file.
         await page.click('button.btn.btn--small.btn--primary[value="0"]');
 
+console.log('Donation amount submitted.');
+
         // wait until the next page in the checkout
         await page.waitForNavigation({
             timeOut: 60,
             waitUntil: 'load'
         });
 
-        await page.select('#billing-title', scenario.title);
-        await page.type(`#billing-first_name`, scenario.firstName);
-        await page.type(`#billing-last_name`, scenario.lastName);
+        try {
 
-        if (scenario.yearOfBirth !== null) {
-            await page.select('#billing-date_of_birth', scenario.yearOfBirth.toString() );
+            await page.select('#billing-title', scenario.title);
+            await page.type(`#billing-first_name`, scenario.firstName);
+            await page.type(`#billing-last_name`, scenario.lastName);
+
+            if (scenario.yearOfBirth !== null) {
+                await page.select('#billing-date_of_birth', scenario.yearOfBirth.toString() );
+            }
+
+            await page.type(`#billing-email`, scenario.email);
+            await page.type(`#billing-telephone2`, scenario.mobile.toString() );
+            await page.type(`#billing-telephone`, scenario.telephone.toString() );
+
+    console.log('Name and contact details typed.');
+
+            await page.type(`#billing-paf`, scenario.postcode);
+            await page.click('#search-button-billing-paf');
+            await page.waitFor('input[name="address__option"]');
+
+            let addressOption = await page.$$('input[name="address__option"]');
+                addressOption[0].click();
+    console.log('PAF lookup submitted.');
+
+            await delayBy(1);
+
+            await page.select('#billing-country', "1");
+
+            await page.evaluate( () => {
+                document.querySelector(`#billing-address_1`).value = "";
+                document.querySelector(`#billing-address_2`).value = "";
+                document.querySelector(`#billing-address_3`).value = "";
+                document.querySelector(`#billing-city_town`).value = "";
+                document.querySelector(`#billing-county`).value = "";
+                document.querySelector(`#billing-postcode`).value = "";
+            })
+
+            await page.type(`#billing-address_1`, scenario.address1);
+            await page.type(`#billing-address_2`, scenario.address2);
+            await page.type(`#billing-address_3`, scenario.address3);
+            await page.type(`#billing-city_town`, scenario.cityOrTown);
+            await page.type(`#billing-county`, scenario.county);
+            await page.type(`#billing-postcode`, scenario.postcode);
+            console.log('Address filled in.');
+        }
+        catch (error) {
+           error('Address NOT filled in.');
+            error(error);
         }
 
-        await page.type(`#billing-email`, scenario.email);
-        await page.type(`#billing-telephone2`, scenario.mobile.toString() );
-        await page.type(`#billing-telephone`, scenario.telephone.toString() );
-        await page.type(`#billing-paf`, scenario.postcode);
-        await page.click('#search-button-billing-paf');
-        await page.waitFor('input[name="address__option"]');
-
-        let addressOption = await page.$$('input[name="address__option"]');
-            addressOption[0].click();
-
-        await delayBy(1);
-
-        await page.select('#billing-country', "1");
-
-        await page.evaluate( () => {
-            document.querySelector(`#billing-address_1`).value = "";
-            document.querySelector(`#billing-address_2`).value = "";
-            document.querySelector(`#billing-address_3`).value = "";
-            document.querySelector(`#billing-city_town`).value = "";
-            document.querySelector(`#billing-county`).value = "";
-            document.querySelector(`#billing-postcode`).value = "";
-        })
-
-        await page.type(`#billing-address_1`, scenario.address1);
-        await page.type(`#billing-address_2`, scenario.address2);
-        await page.type(`#billing-address_3`, scenario.address3);
-        await page.type(`#billing-city_town`, scenario.cityOrTown);
-        await page.type(`#billing-county`, scenario.county);
-        await page.type(`#billing-postcode`, scenario.postcode);
 
         if (scenario.thankYouLetter  === true) {
             await page.click(`.funnel__option.checkbox.optional`);
@@ -144,15 +159,22 @@ const runScenario = (url, scenario) => {
             await page.click(`#newsletter_signup`);
         }
 
+console.log('Communication options filled in.');
+
         await page.evaluate( () => { // #captureForm.submit()
+
             document.querySelector('#captureForm').submit();
         });
+
+console.log('captureForm submitted');
 
         // wait until the next page in the checkout
         await page.waitForNavigation({
             timeOut: 60,
             waitUntil: 'load'
         });
+
+console.log('Gift aid and payment details page loaded.');
 
         if (scenario.giftAid === true) {
             await page.click(`#uk_tax_payer`);
@@ -172,6 +194,7 @@ const runScenario = (url, scenario) => {
         await frames.forEach( async frame => {
             if (frame.name() === 'payment') {
                 await frame.evaluate( () => {
+console.log('Payment iframe performanceNodeTiming.moduleLoadEnd.');
                     try {
                         document.querySelector('input[name="cardnumber"]').value = '4462000000000003';
                         document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
@@ -197,6 +220,7 @@ const runScenario = (url, scenario) => {
                     }
                     catch (error) {
                         error(error);
+                        Promise.reject(error);
                     }
                 });
 
