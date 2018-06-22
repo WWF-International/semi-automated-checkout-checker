@@ -1,11 +1,12 @@
 {
   "name": "automatic-donation-scenario-makr",
   "version": "1.0.0",
-  "description": "This uses Pupeteer to automatically put through a set of test transactions through the dev support site.",
-  "main": "run.js",
+  "description": "This uses {insert browser here} driver to automatically put through a set of test transactions through the dev support site.",
+  "main": "npm run c",
   "scripts": {
     "test": "test",
-    "start": "node run.js"
+    "c": "node chrome",
+    "ff": "node firefox"
   },
   "author": "Ian James, https://github.com/injms",
   "license": "UNLICENSED",

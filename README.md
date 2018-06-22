@@ -6,7 +6,7 @@ Tested on Node v9.0.0 (NPM 5.5.1) on Windows 7. Uses Puppeteer, so should work f
 
 Install by `npm install`.
 
-Run by `npm start` (or `node run.js`).
+Run by `npm run c` for Chrome. Headless Firefox coming soon.
 
 ## Edit
 
