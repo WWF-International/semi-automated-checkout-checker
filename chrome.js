@@ -60,6 +60,8 @@ const runScenario = (url, scenario) => {
 
         page.setRequestInterceptionEnabled(true);
 
+        // To make things faster let's ignore all images - except on the final
+        // thank you page.
         page.on('request', (request) => {
             if (
                 request.resourceType === 'image' &&
@@ -81,18 +83,20 @@ const runScenario = (url, scenario) => {
         await page.waitFor('input[name="other_amount_oneOff"]');
         await page.type(
             'input[name="other_amount_oneOff"]',
-            scenario.amount.toString()
-        ); // Needs to be a string here; can be either integer or string in tests JSON file.
+            scenario.amount.toString() // Needs to be a string here; can be either integer or string in tests JSON file.
+        );
         await page.click('button.btn.btn--small.btn--primary[value="0"]');
 
         console.log('Donation amount submitted.');
 
         // wait until the next page in the checkout
         await page.waitForNavigation({
-            timeOut: 60,
+            timeOut: 120,
             waitUntil: 'load'
         });
 
+
+        // Go through the test scenario and fill in the first page.
         try {
             await page.select('#billing-title', scenario.title);
             await page.type(`#billing-first_name`, scenario.firstName);
@@ -170,8 +174,6 @@ const runScenario = (url, scenario) => {
         console.log('Communication options filled in.');
 
         await page.evaluate(() => {
-            // #captureForm.submit()
-
             document.querySelector('#captureForm').submit();
         });
 
@@ -217,19 +219,11 @@ const runScenario = (url, scenario) => {
                 await frame.evaluate(() => {
                     console.log('Payment iframe.');
                     try {
-                        document.querySelector(
-                            'input[name="cardnumber"]'
-                        ).value =
+                        document.querySelector('input[name="cardnumber"]').value =
                             '4462000000000003';
-                        document.querySelector(
-                            'select[name="expirymonth"] option[value="11"]'
-                        ).selected = true;
-                        document.querySelector(
-                            'select[name="expiryyear"] option[value="27"]'
-                        ).selected = true;
-                        document.querySelector(
-                            'input[name="securitycode"]'
-                        ).value = 123;
+                        document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
+                        document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
+                        document.querySelector('input[name="securitycode"]').value = 123;
                         document.querySelector('#carddetails').submit();
                         return Promise.resolve();
                     } catch (error) {
@@ -246,10 +240,7 @@ const runScenario = (url, scenario) => {
 
                 await frame.evaluate(() => {
                     try {
-                        document.querySelector(
-                            'input[name="password"][type="password"]'
-                        ).value =
-                            'password';
+                        document.querySelector('input[name="password"][type="password"]').value = 'password';
                         document.querySelector('form').submit();
                         return Promise.resolve();
                     } catch (error) {
