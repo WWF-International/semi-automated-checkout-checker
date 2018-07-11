@@ -40,6 +40,21 @@ const error = (errorMessage) => {
 //      @object scenario - the test transaction details
 //      @returns string - the transaction ID.
 // -----------------------------------------------------------------------------
+const AMOUNT_BOX_SELECTOR = 'input[name="amount"][type="text"]';
+const DONATE_BUTTON_SELECTOR = 'input[value="Donate"][type="submit"]';
+const SALUTATION_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-title-salutation';
+const FIRST_NAME_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-given-name';
+const LAST_NAME_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-family-name';
+const YOB_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-year-of-birth-0-value';
+const EMAIL_SELECTOR = '#edit-contact-information-email';
+const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-mobile-phone-0-value';
+const PHONE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-home-phone-0-value';
+const POSTCODE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code';
+const POSTCODE_BUTTON_SELECTOR = '';
+const ADDRESS_DROPDOWN_SELECTOR = '';
+const COUNTRY_DROPDOWN_SELECTOR = 'edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
+
+
 const runScenario = (url, scenario) => {
     return new Promise(async (resolve, reject) => {
         const browser = await puppeteer.launch({
@@ -80,12 +95,12 @@ const runScenario = (url, scenario) => {
         // TODO: if 404, 500 or other page error, reject the promise.
 
         // Wait for form to load, then put in amount, then submit
-        await page.waitFor('input[name="other_amount_oneOff"]');
+        await page.waitFor(AMOUNT_BOX_SELECTOR);
         await page.type(
-            'input[name="other_amount_oneOff"]',
+            AMOUNT_BOX_SELECTOR,
             scenario.amount.toString() // Needs to be a string here; can be either integer or string in tests JSON file.
         );
-        await page.click('button.btn.btn--small.btn--primary[value="0"]');
+        await page.click(DONATE_BUTTON_SELECTOR);
 
         console.log('Donation amount submitted.');
 
@@ -98,28 +113,28 @@ const runScenario = (url, scenario) => {
 
         // Go through the test scenario and fill in the first page.
         try {
-            await page.select('#billing-title', scenario.title);
-            await page.type(`#billing-first_name`, scenario.firstName);
-            await page.type(`#billing-last_name`, scenario.lastName);
+            await page.select(SALUTATION_SELECTOR, scenario.title);
+            await page.type(FIRST_NAME_SELECTOR, scenario.firstName);
+            await page.type(LAST_NAME_SELECTOR, scenario.lastName);
 
             if (scenario.yearOfBirth !== null) {
                 await page.select(
-                    '#billing-date_of_birth',
+                    YOB_SELECTOR,
                     scenario.yearOfBirth.toString()
                 );
             }
 
-            await page.type(`#billing-email`, scenario.email);
-            await page.type(`#billing-telephone2`, scenario.mobile.toString());
+            await page.type(EMAIL_SELECTOR, scenario.email);
+            await page.type(MOBILE_SELECTOR, scenario.mobile.toString());
             await page.type(
-                `#billing-telephone`,
+                PHONE_SELECTOR,
                 scenario.telephone.toString()
             );
 
             console.log('Name and contact details typed.');
 
-            await page.type(`#billing-paf`, scenario.postcode);
-            await page.click('#search-button-billing-paf');
+            await page.type(POSTCODE_SELECTOR, scenario.postcode);
+            await page.click(POSTCODE_BUTTON_SELECTOR);
             await page.waitFor('input[name="address__option"]');
 
             let addressOption = await page.$$('input[name="address__option"]');
