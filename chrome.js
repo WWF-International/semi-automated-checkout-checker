@@ -51,9 +51,14 @@ const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-in
 const PHONE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-home-phone-0-value';
 const POSTCODE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code';
 const POSTCODE_BUTTON_SELECTOR = '';
-const ADDRESS_DROPDOWN_SELECTOR = '';
-const COUNTRY_DROPDOWN_SELECTOR = 'edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
-
+const ADDRESS_DROPDOWN_SELECTOR = '#address-suggestion-box';
+const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
+const EOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-email';
+const SMS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-text';
+const MOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-post';
+const NOTHANKS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-no-thanks';
+const GIFTAID_SELECTOR= '#edit-claim-gift-aid-gift-aid-declaration';
+const CONTINUE_SELECTOR = '#edit-actions-next';
 
 const runScenario = (url, scenario) => {
     return new Promise(async (resolve, reject) => {
@@ -113,18 +118,13 @@ const runScenario = (url, scenario) => {
 
         // Go through the test scenario and fill in the first page.
         try {
+            await page.type(EMAIL_SELECTOR, scenario.email);
+
             await page.select(SALUTATION_SELECTOR, scenario.title);
+            await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
             await page.type(FIRST_NAME_SELECTOR, scenario.firstName);
             await page.type(LAST_NAME_SELECTOR, scenario.lastName);
 
-            if (scenario.yearOfBirth !== null) {
-                await page.select(
-                    YOB_SELECTOR,
-                    scenario.yearOfBirth.toString()
-                );
-            }
-
-            await page.type(EMAIL_SELECTOR, scenario.email);
             await page.type(MOBILE_SELECTOR, scenario.mobile.toString());
             await page.type(
                 PHONE_SELECTOR,
@@ -134,13 +134,17 @@ const runScenario = (url, scenario) => {
             console.log('Name and contact details typed.');
 
             await page.type(POSTCODE_SELECTOR, scenario.postcode);
-            await page.click(POSTCODE_BUTTON_SELECTOR);
-            await page.waitFor('input[name="address__option"]');
+            //await page.click(POSTCODE_BUTTON_SELECTOR);
+            await page.waitFor(ADDRESS_DROPDOWN_SELECTOR);
 
+            //let addressDiv = findAddressDiv(scenario.address1, ADDRESS_DROPDOWN_SELECTOR);
+            await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains(${scenario.address1})`);
+/*
             let addressOption = await page.$$('input[name="address__option"]');
             addressOption[0].click();
+*/
             console.log('PAF lookup submitted.');
-
+/*
             await delayBy(1);
 
             await page.select('#billing-country', '1');
@@ -161,29 +165,41 @@ const runScenario = (url, scenario) => {
             await page.type(`#billing-county`, scenario.county);
             await page.type(`#billing-postcode`, scenario.postcode);
             console.log('Address filled in.');
-        } catch (error) {
-            error('Address NOT filled in.');
-            error(error);
-        }
 
+*/
+} catch (error) {
+    error('Address NOT filled in.');
+    error(error);
+}
+        if (scenario.yearOfBirth !== null) {
+            await page.select(
+                YOB_SELECTOR,
+                scenario.yearOfBirth.toString()
+            );
+        }
+/*
         if (scenario.thankYouLetter === true) {
             await page.click(`.funnel__option.checkbox.optional`);
         }
-
+*/
         if (scenario.communicationByEmail === true) {
-            await page.click(`#con_email`);
+            await page.click(EOI_SELECTOR);
         }
 
         if (scenario.communicationByText === true) {
-            await page.click(`#con_sms`);
+            await page.click(SMS_SELECTOR);
         }
-
+/*
         if (scenario.communicationByPhone === true) {
-            await page.click(`#con_tel`);
+            await page.click('#MOI_SELECTOR');
+        }
+*/
+        if (scenario.noThanks === true) {
+            await page.click(NOTHANKS_SELECTOR);
         }
 
-        if (scenario.communicationByPost === true) {
-            await page.click(`#newsletter_signup`);
+        if (scenario.giftAid === true) {
+            await page.click(GIFTAID_SELECTOR);
         }
 
         console.log('Communication options filled in.');
