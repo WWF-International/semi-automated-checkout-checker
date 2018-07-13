@@ -51,7 +51,7 @@ const YOB_SELECTOR = '#edit-payment-information-add-payment-method-billing-infor
 const EMAIL_SELECTOR = '#edit-contact-information-email';
 const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-mobile-phone-0-value';
 const PHONE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-home-phone-0-value';
-const POSTCODE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code';
+const POSTCODE_SELECTOR = '[data-drupal-selector="edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code"]';
 const POSTCODE_BUTTON_SELECTOR = '';
 const ADDRESS_DROPDOWN_SELECTOR = '#address-suggestion-box';
 const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
@@ -135,10 +135,7 @@ const runScenario = (url, scenario) => {
         await page.type(LAST_NAME_SELECTOR, scenario.lastName);
 
         await page.type(MOBILE_SELECTOR, scenario.mobile.toString());
-        await page.type(
-          PHONE_SELECTOR,
-          scenario.telephone.toString()
-        );
+        await page.type(PHONE_SELECTOR, scenario.telephone.toString());
 
         console.log('Name and contact details typed.');
 
@@ -147,7 +144,11 @@ const runScenario = (url, scenario) => {
         await page.waitFor(ADDRESS_DROPDOWN_SELECTOR);
 
         //let addressDiv = findAddressDiv(scenario.address1, ADDRESS_DROPDOWN_SELECTOR);
-        await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains(${scenario.address1})`);
+
+/////////////////////////////////////////////////////////////////
+        //TODO queryselector !== jQuery :(
+/////////////////////////////////////////////////////////////////        
+        await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
         /*
                     let addressOption = await page.$$('input[name="address__option"]');
                     addressOption[0].click();
