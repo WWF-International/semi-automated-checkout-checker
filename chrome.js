@@ -53,7 +53,7 @@ const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-in
 const PHONE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-home-phone-0-value';
 const POSTCODE_SELECTOR = '[data-drupal-selector="edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code"]';
 const POSTCODE_BUTTON_SELECTOR = '';
-const ADDRESS_DROPDOWN_SELECTOR = '#address-suggestion-box';
+const ADDRESS_DROPDOWN_SELECTOR = '#address-suggestion-box .postcode-address-lookup-item';
 const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
 const EOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-email';
 const SMS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-text';
@@ -147,8 +147,9 @@ const runScenario = (url, scenario) => {
 
 /////////////////////////////////////////////////////////////////
         //TODO queryselector !== jQuery :(
-/////////////////////////////////////////////////////////////////        
-        await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
+/////////////////////////////////////////////////////////////////
+        //await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
+          await page.evaluate((selector) => {console.log(selector);jQuery(selector).click();},`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
         /*
                     let addressOption = await page.$$('input[name="address__option"]');
                     addressOption[0].click();
@@ -182,7 +183,7 @@ const runScenario = (url, scenario) => {
         console.error(error);
       }
       if (scenario.yearOfBirth !== null) {
-        await page.select(
+        await page.type(
           YOB_SELECTOR,
           scenario.yearOfBirth.toString()
         );
