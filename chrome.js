@@ -45,8 +45,8 @@ const error = (errorMessage) => {
 const AMOUNT_BOX_SELECTOR = 'input[name="amount"][type="text"]';
 const DONATE_BUTTON_SELECTOR = 'input[value="Donate"][type="submit"]';
 const SALUTATION_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-title-salutation';
-const FIRST_NAME_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-given-name';
-const LAST_NAME_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-family-name';
+const FIRST_NAME_SELECTOR = 'input[data-drupal-selector=edit-payment-information-add-payment-method-billing-information-address-0-address-given-name]';
+const LAST_NAME_SELECTOR = 'input[data-drupal-selector=edit-payment-information-add-payment-method-billing-information-address-0-address-family-name]';
 const YOB_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-year-of-birth-0-value';
 const EMAIL_SELECTOR = '#edit-contact-information-email';
 const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-mobile-phone-0-value';
@@ -61,10 +61,13 @@ const MOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-infor
 const NOTHANKS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-no-thanks';
 const GIFTAID_SELECTOR = '#edit-claim-gift-aid-gift-aid-declaration';
 const CONTINUE_SELECTOR = '#edit-actions-next';
-const STRIPE_CVC_FRAME_SELECTOR = '.stripe-form.js-form-wrapper.form-wrapper iframe:nth(2)';
+//const STRIPE_CVC_FRAME_SELECTOR = '.stripe-form.js-form-wrapper.form-wrapper iframe:nth(2)';
 const CARDNUMBER_FRAME_NAME = '__privateStripeFrame3';
+const EXPIRY_FRAME_NAME = '__privateStripeFrame4';
+const CVC_FRAME_NAME = '__privateStripeFrame5';
 const ARDNUMBER_SELECTOR = 'input.InputElement';
 const EXPIRY_DATE_FRAME_NAME = '__privateStripeFrame4';
+const CARDNUMBER_SELECTOR = 'input.InputElement';
 
 
 const runScenario = (url, scenario) => {
@@ -129,8 +132,10 @@ const runScenario = (url, scenario) => {
       try {
         await page.type(EMAIL_SELECTOR, scenario.email);
 
-        await page.select(SALUTATION_SELECTOR, scenario.title);
+        await page.select(SALUTATION_SELECTOR, scenario.title.toLowerCase());
         await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
+        let name = await page.$$(FIRST_NAME_SELECTOR);
+        await delayBy(1);
         await page.type(FIRST_NAME_SELECTOR, scenario.firstName);
         await page.type(LAST_NAME_SELECTOR, scenario.lastName);
 
@@ -247,7 +252,7 @@ const runScenario = (url, scenario) => {
       // a batch of tests simply try again - I think that the Sagepay dev
       // environment is a bit slow to start with.
 
-      await page.waitForSelector(STRIPE_CVC_FRAME_SELECTOR);
+    //  await page.waitForSelector(STRIPE_CVC_FRAME_SELECTOR);
       console.log('stripe iframe loaded.');
 
       const frames = page.frames();
@@ -257,21 +262,58 @@ const runScenario = (url, scenario) => {
       await frames.forEach(async (frame) => {
           console.log('Frame found.');
           if (frame.name() === CARDNUMBER_FRAME_NAME) {
-            await frame.evaluate(() => {
+            await frame.evaluate((selector) => {
               try {
-                document.querySelector(CARDNUMBER_SELECTOR).value =
+
+                document.querySelector(selector).value =
                   '4462000000000003';
-                document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
-                document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
-                document.querySelector('input[name="securitycode"]').value = 123;
-                document.querySelector('#carddetails').submit();
+            //    document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
+            //    document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
+            //    document.querySelector('input[name="securitycode"]').value = 123;
+            //    document.querySelector('#carddetails').submit();
                 return Promise.resolve();
-              } catch (error) {
-                error(error);
+              } catch (err) {
+                console.error(err);
                 return Promise.reject();
               }
-            });
+            },CARDNUMBER_SELECTOR);
           }
+          if (frame.name() === EXPIRY_FRAME_NAME) {
+            await frame.evaluate((selector) => {
+              try {
+
+                document.querySelector(selector).value =
+                  '11 / 27';
+            //    document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
+            //    document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
+            //    document.querySelector('input[name="securitycode"]').value = 123;
+            //    document.querySelector('#carddetails').submit();
+                return Promise.resolve();
+              } catch (err) {
+                console.error(err);
+                return Promise.reject();
+              }
+            },CARDNUMBER_SELECTOR);
+          }
+          if (frame.name() === CVC_FRAME_NAME) {
+            await frame.evaluate((selector) => {
+              try {
+
+                document.querySelector(selector).value =
+                  '123';
+            //    document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
+            //    document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
+            //    document.querySelector('input[name="securitycode"]').value = 123;
+            //    document.querySelector('#carddetails').submit();
+                return Promise.resolve();
+              } catch (err) {
+                console.error(err);
+                return Promise.reject();
+              }
+            },CARDNUMBER_SELECTOR);
+          }
+
+
         });
           /*
                           await frame.waitFor('[name="password"][type="password"]');
@@ -304,8 +346,8 @@ const runScenario = (url, scenario) => {
             fullPage: true
           });
 
-          await browser.close().catch((error) => {
-            error(error);
+          await browser.close().catch((err) => {
+            error(err);
           });
 
           resolve(number);
@@ -341,7 +383,7 @@ const runScenario = (url, scenario) => {
         'Saved to ' + chalk.green(`test-transactions-for-${name}.csv`)
       );
     })
-    .catch((error) => {
-      error(error);
+    .catch((err) => {
+      error(err);
     });
 })();
