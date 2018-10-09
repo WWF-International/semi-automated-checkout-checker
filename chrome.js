@@ -48,19 +48,20 @@ const CONTINUE_BUTTON_SELECTOR = '#edit-basket > div.section-body > div > button
 const SALUTATION_SELECTOR = 'select[data-drupal-selector="edit-your-details-field-title"]';
 const FIRST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-first-name-0-value"]';
 const LAST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-last-name-0-value"]';
-const YOB_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-year-of-birth-0-value';
+const YOB_SELECTOR = '[data-drupal-selector="edit-your-details-field-yob-0-value"]';
 const EMAIL_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-email-address-0-value"]';
 const MOBILE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-mobile-tel-0-value"]';
 const PHONE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-home-tel-0-value"]';
 const POSTCODE_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-postcode-input"]';
 const POSTCODE_BUTTON_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-find"]';
 const ADDRESS_DROPDOWN_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-select"]';
-const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
-const EOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-email';
-const SMS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-text';
-const MOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-post';
-const NOTHANKS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-no-thanks';
-const GIFTAID_SELECTOR = '#edit-claim-gift-aid-gift-aid-declaration';
+//const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
+const EOI_SELECTOR = '[data-drupal-selector="edit-marketing-preferences-marketing-preferences-email"]';
+const SMS_SELECTOR = '[data-drupal-selector="edit-marketing-preferences-marketing-preferences-text"]';
+const MOI_SELECTOR = '[data-drupal-selector="edit-marketing-preferences-marketing-preferences-phone"]';
+const PHONE_OI_SELECTOR = '[data-drupal-selector="edit-marketing-preferences-marketing-preferences-phone"]';
+const CONTINUE_TO_PAYMENT_SELECTOR = '#edit-details > div.section-body > div > button';
+const GIFTAID_SELECTOR = '[data-drupal-selector="edit-gift-aid-giftaid-agreement"]';
 const CONTINUE_SELECTOR = '[data-drupal-selector="edit-actions"]';
 const CARDNUMBER_FRAME_NAME = '__privateStripeFrame3';
 const EXPIRY_FRAME_NAME = '__privateStripeFrame4';
@@ -68,9 +69,9 @@ const CVC_FRAME_NAME = '__privateStripeFrame5';
 const ARDNUMBER_SELECTOR = 'input.InputElement';
 const EXPIRY_DATE_FRAME_NAME = '__privateStripeFrame4';
 const CARDNUMBER_SELECTOR = 'input.InputElement';
-const OWN_MONEY_SELECTOR = '[data-drupal-selector="edit-claim-gift-aid-gift-aid-q-1"]';
-const NOT_PROCEEDS_SELECTOR = '[data-drupal-selector="edit-claim-gift-aid-gift-aid-q-2"]';
-const NOT_TICKET_SELECTOR = '[data-drupal-selector="edit-claim-gift-aid-gift-aid-q-3"]';
+const OWN_MONEY_SELECTOR = '[data-drupal-selector="edit-gift-aid-giftaid-declaration-1"]';
+const NOT_PROCEEDS_SELECTOR = '[data-drupal-selector="edit-gift-aid-giftaid-declaration-2"]';
+const NOT_TICKET_SELECTOR = '[data-drupal-selector="edit-gift-aid-giftaid-declaration-3"]';
 const TEST_CARD_NUMBER = '4242424242424242';
 const ORDER_NUMBER_SELECTOR = '.hgroup';
 const PAY_AND_COMPLETE_SELECTOR = '[data-drupal-selector="edit-actions-next"]';
@@ -207,16 +208,18 @@ const runScenario = (url, scenario) => {
 
       await page.type(POSTCODE_SELECTOR, scenario.postcode);
       await page.click(POSTCODE_BUTTON_SELECTOR);
+      console.log('PAF lookup submitted.');
       await page.waitFor(ADDRESS_DROPDOWN_SELECTOR);
-
+      await delayBy(1);
       await page.evaluate((selector, find) => {
         console.log(find);
-        jQuery(selector).find(find).attr('selected', true);
+        console.log(jQuery(selector).find(find).attr('selected', true));
 
       }, `${ADDRESS_DROPDOWN_SELECTOR}`, `option:contains("${scenario.address1}")` );
 
-      console.log('PAF lookup submitted.');
-await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
+      console.log('PAF address selected.');
+
+//await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
     } catch (error) {
       console.error('Address NOT filled in.');
       console.error(error);
@@ -244,14 +247,16 @@ await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
                 await page.click('#MOI_SELECTOR');
             }
     */
-    if (scenario.noThanks === true) {
-      await page.click(NOTHANKS_SELECTOR);
+    if (scenario.communicationByPhone === true) {
+      await page.click(PHONE_OI_SELECTOR);
     }
-
+    console.log('Communication options filled in.');
+/*
     if (scenario.giftAid === true) {
       await page.click(GIFTAID_SELECTOR);
     }
-    console.log('Communication options filled in.');
+
+
 
     if (scenario.giftAid === true) {
     //  await page.click(`#uk_tax_payer`);
@@ -260,22 +265,34 @@ await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
       await page.click(NOT_TICKET_SELECTOR);
     }
     console.log('Gift aid done.');
+*/
+  //  await page.hover('[data-drupal-selector="edit-payment-information-add-payment-method-payment-details"]');
 
-    await page.hover('[data-drupal-selector="edit-payment-information-add-payment-method-payment-details"]');
+
+    await page.click(CONTINUE_TO_PAYMENT_SELECTOR);
 
 
-    //    await page.click(CONTINUE_SELECTOR);
+    await page.waitFor(GIFTAID_SELECTOR);
 
+    if (scenario.giftAid === true) {
+      await page.click(GIFTAID_SELECTOR);
+      console.log('doing giftaid');
+
+    //  await page.click(`#uk_tax_payer`);
+      await page.click(OWN_MONEY_SELECTOR);
+      await page.click(NOT_PROCEEDS_SELECTOR);
+      await page.click(NOT_TICKET_SELECTOR);
+    }
+    console.log('Gift aid done.');
+
+  //  await page.click(PAY_AND_COMPLETE_SELECTOR);
 
     await page.waitForNavigation({
+      timeOut: 120,
       waitUntil: 'load'
     });
 
-    await page.click(PAY_AND_COMPLETE_SELECTOR);
 
-    await page.waitForNavigation({
-      waitUntil: 'load'
-    });
 
     const number = await page.evaluate((orderNumber) => {
       let orderNumberRegex = /[\d,-]+/ ;
