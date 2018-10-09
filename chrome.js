@@ -42,18 +42,19 @@ const error = (errorMessage) => {
 // -----------------------------------------------------------------------------
 
 //TODO selectors.inc
-const AMOUNT_BOX_SELECTOR = 'input[name="amount"][type="text"]';
+const AMOUNT_BOX_SELECTOR = 'input[data-drupal-selector="edit-donation-amount-number"]';
 const DONATE_BUTTON_SELECTOR = 'input[value="Donate"][type="submit"]';
-const SALUTATION_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-title-salutation';
-const FIRST_NAME_SELECTOR = 'input[data-drupal-selector=edit-payment-information-add-payment-method-billing-information-address-0-address-given-name]';
-const LAST_NAME_SELECTOR = 'input[data-drupal-selector=edit-payment-information-add-payment-method-billing-information-address-0-address-family-name]';
+const CONTINUE_BUTTON_SELECTOR = '#edit-basket > div.section-body > div > button';
+const SALUTATION_SELECTOR = 'select[data-drupal-selector="edit-your-details-field-title"]';
+const FIRST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-first-name-0-value"]';
+const LAST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-last-name-0-value"]';
 const YOB_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-year-of-birth-0-value';
-const EMAIL_SELECTOR = '#edit-contact-information-email';
-const MOBILE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-mobile-phone-0-value';
-const PHONE_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-home-phone-0-value';
-const POSTCODE_SELECTOR = '[data-drupal-selector="edit-payment-information-add-payment-method-billing-information-address-0-address-postal-code"]';
-const POSTCODE_BUTTON_SELECTOR = '';
-const ADDRESS_DROPDOWN_SELECTOR = '#address-suggestion-box .postcode-address-lookup-item';
+const EMAIL_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-email-address-0-value"]';
+const MOBILE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-mobile-tel-0-value"]';
+const PHONE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-home-tel-0-value"]';
+const POSTCODE_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-postcode-input"]';
+const POSTCODE_BUTTON_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-find"]';
+const ADDRESS_DROPDOWN_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-select"]';
 const COUNTRY_DROPDOWN_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-address-0-address-country-code--2';
 const EOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-email';
 const SMS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-yes-text';
@@ -61,7 +62,6 @@ const MOI_SELECTOR = '#edit-payment-information-add-payment-method-billing-infor
 const NOTHANKS_SELECTOR = '#edit-payment-information-add-payment-method-billing-information-field-communication-no-thanks';
 const GIFTAID_SELECTOR = '#edit-claim-gift-aid-gift-aid-declaration';
 const CONTINUE_SELECTOR = '[data-drupal-selector="edit-actions"]';
-//const STRIPE_CVC_FRAME_SELECTOR = '.stripe-form.js-form-wrapper.form-wrapper iframe:nth(2)';
 const CARDNUMBER_FRAME_NAME = '__privateStripeFrame3';
 const EXPIRY_FRAME_NAME = '__privateStripeFrame4';
 const CVC_FRAME_NAME = '__privateStripeFrame5';
@@ -76,6 +76,7 @@ const ORDER_NUMBER_SELECTOR = '.hgroup';
 const PAY_AND_COMPLETE_SELECTOR = '[data-drupal-selector="edit-actions-next"]';
 
 const runScenario = (url, scenario) => {
+
   return new Promise(async (resolve, reject) => {
     const browser = await puppeteer.launch({
       headless: false,
@@ -135,10 +136,13 @@ const runScenario = (url, scenario) => {
     });
     await delayBy(1);
 
+    await page.click(CONTINUE_BUTTON_SELECTOR);
+
+
     // Go through the test scenario and fill in the first page.
     try {
       await page.type(EMAIL_SELECTOR, scenario.email);
-      const frames = page.frames();
+/*      const frames = page.frames();
       await frames.forEach(async (frame) => {
         console.log('Frame found.');
 
@@ -188,10 +192,10 @@ const runScenario = (url, scenario) => {
 
 
       });
+*/
+      await page.select(SALUTATION_SELECTOR, scenario.title);
 
-      await page.select(SALUTATION_SELECTOR, scenario.title.toLowerCase());
-      await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
-      let name = await page.$$(FIRST_NAME_SELECTOR);
+//      let name = await page.$$(FIRST_NAME_SELECTOR);
       await delayBy(1);
       await page.type(FIRST_NAME_SELECTOR, scenario.firstName);
       await page.type(LAST_NAME_SELECTOR, scenario.lastName);
@@ -202,47 +206,17 @@ const runScenario = (url, scenario) => {
       console.log('Name and contact details typed.');
 
       await page.type(POSTCODE_SELECTOR, scenario.postcode);
-      //await page.click(POSTCODE_BUTTON_SELECTOR);
+      await page.click(POSTCODE_BUTTON_SELECTOR);
       await page.waitFor(ADDRESS_DROPDOWN_SELECTOR);
 
-      //let addressDiv = findAddressDiv(scenario.address1, ADDRESS_DROPDOWN_SELECTOR);
+      await page.evaluate((selector, find) => {
+        console.log(find);
+        jQuery(selector).find(find).attr('selected', true);
 
-      /////////////////////////////////////////////////////////////////
-      //TODO queryselector !== jQuery :(
-      /////////////////////////////////////////////////////////////////
-      //await page.click(`${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
-      await page.evaluate((selector) => {
-        console.log(selector);
-        jQuery(selector).click();
-      }, `${ADDRESS_DROPDOWN_SELECTOR}.postcode-address-lookup-item:contains("${scenario.address1}")`);
-      /*
-                  let addressOption = await page.$$('input[name="address__option"]');
-                  addressOption[0].click();
-      */
+      }, `${ADDRESS_DROPDOWN_SELECTOR}`, `option:contains("${scenario.address1}")` );
+
       console.log('PAF lookup submitted.');
-      /*
-                  await delayBy(1);
-
-                  await page.select('#billing-country', '1');
-
-                  await page.evaluate(() => {
-                      document.querySelector(`#billing-address_1`).value = '';
-                      document.querySelector(`#billing-address_2`).value = '';
-                      document.querySelector(`#billing-address_3`).value = '';
-                      document.querySelector(`#billing-city_town`).value = '';
-                      document.querySelector(`#billing-county`).value = '';
-                      document.querySelector(`#billing-postcode`).value = '';
-                  });
-
-                  await page.type(`#billing-address_1`, scenario.address1);
-                  await page.type(`#billing-address_2`, scenario.address2);
-                  await page.type(`#billing-address_3`, scenario.address3);
-                  await page.type(`#billing-city_town`, scenario.cityOrTown);
-                  await page.type(`#billing-county`, scenario.county);
-                  await page.type(`#billing-postcode`, scenario.postcode);
-                  console.log('Address filled in.');
-
-      */
+await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
     } catch (error) {
       console.error('Address NOT filled in.');
       console.error(error);
@@ -293,58 +267,6 @@ const runScenario = (url, scenario) => {
     //    await page.click(CONTINUE_SELECTOR);
 
 
-    /*
-          await page.evaluate(() => {
-            document.querySelector('#captureForm').submit();
-          });
-
-          console.log('captureForm submitted');
-
-          // wait until the next page in the checkout
-          await page.waitForNavigation({
-            timeOut: 60,
-            waitUntil: 'load'
-          });
-
-          console.log('Gift aid and payment details page loaded.');
-
-
-          await page.click('#pay-by-card');
-          console.log('Pay by card clicked.');
-          await delayBy(10);
-    */
-    // If something is going to go wrong, it'll probably be here - the
-    // selectors in the Sagepay iframe sometimes change without warning.
-    // However, if the iframe doesn't load on the first time running through
-    // a batch of tests simply try again - I think that the Sagepay dev
-    // environment is a bit slow to start with.
-
-    //  await page.waitForSelector(STRIPE_CVC_FRAME_SELECTOR);
-
-
-
-
-    //await delayBy(4);
-
-
-    /*
-                    await frame.waitFor('[name="password"][type="password"]');
-
-                    let passwordForm = await frame.$(
-                        '[name="password"][type="password"]'
-                    );
-
-                    await frame.evaluate(() => {
-                        try {
-                            document.querySelector('input[name="password"][type="password"]').value = 'password';
-                            document.querySelector('form').submit();
-                            return Promise.resolve();
-                        } catch (error) {
-                            error(error);
-                            Promise.reject(error);
-                        }
-                    });
-    */
     await page.waitForNavigation({
       waitUntil: 'load'
     });
@@ -364,7 +286,6 @@ const runScenario = (url, scenario) => {
     }, ORDER_NUMBER_SELECTOR);
 
 
-
     await page.screenshot({
       path: `./${number}.png`,
       fullPage: true
@@ -376,6 +297,7 @@ const runScenario = (url, scenario) => {
 
     resolve(number);
   });
+
 };
 
 // Async function (so we can use await) that loops through the test transaction
