@@ -22,9 +22,20 @@ const convertJSONtoCSV = require('./JSONtoCSV.js');
 
 // Test scenarios from `test.json`.
 // -----------------------------------------------------------------------------
-const scenarios = require('./tests.json').scenarios;
-const url = require('./tests.json').url;
-const name = require('./tests.json').name;
+
+let testFile = './tests.json';
+if (process.argv[2] && process.argv[2].length > 0 ){
+  let argTestFile = './' + process.argv[2];
+  if (fs.existsSync(argTestFile)){
+    testFile = argTestFile;
+  }
+
+}
+console.log(chalk.blue('Loading tests from:' + testFile));
+
+const scenarios = require(testFile).scenarios;
+const url = require(testFile).url;
+const name = require(testFile).name;
 
 // Helper functions not (yet) in a module.
 // -----------------------------------------------------------------------------
@@ -42,9 +53,9 @@ const error = (errorMessage) => {
 // -----------------------------------------------------------------------------
 
 //TODO selectors.inc
-const AMOUNT_BOX_SELECTOR = 'input[data-drupal-selector="edit-donation-amount-number"]';
-const DONATE_BUTTON_SELECTOR = 'input[value="Donate"][type="submit"]';
-const CONTINUE_BUTTON_SELECTOR = '#edit-basket > div.section-body > div > button';
+const AMOUNT_BOX_SELECTOR = 'input[data-drupal-selector="edit-donation-amount-number"], [data-drupal-selector="edit-purchased-entity-0-recurring-custom-price-number"]';
+const DONATE_BUTTON_SELECTOR = 'input[value="Donate"][type="submit"], input[value="Add to cart"][type="submit"]';
+const CONTINUE_BUTTON_SELECTOR = '[data-drupal-selector="edit-basket-actions-continue"]';
 const SALUTATION_SELECTOR = 'select[data-drupal-selector="edit-your-details-field-title"]';
 const FIRST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-first-name-0-value"]';
 const LAST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-last-name-0-value"]';
@@ -100,6 +111,7 @@ const runScenario = (url, scenario) => {
 
     // To make things faster let's ignore all images - except on the final
     // thank you page.
+
     page.on('request', (request) => {
       if (
         request.resourceType === 'image' &&
