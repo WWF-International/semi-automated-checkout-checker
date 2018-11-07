@@ -25,7 +25,9 @@
             "communicationByPhone" : true,
             "communicationByPost"  : false,
             "giftAid"              : true,
-            "prompt"               : ""
+            "prompt"               : "",
+            "toy"                  : false,
+            "gift"                 : true
         },
         {
             "transactionID"       : "",

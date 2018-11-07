@@ -24,9 +24,9 @@ const convertJSONtoCSV = require('./JSONtoCSV.js');
 // -----------------------------------------------------------------------------
 
 let testFile = './tests.json';
-if (process.argv[2] && process.argv[2].length > 0 ){
+if (process.argv[2] && process.argv[2].length > 0) {
   let argTestFile = './' + process.argv[2];
-  if (fs.existsSync(argTestFile)){
+  if (fs.existsSync(argTestFile)) {
     testFile = argTestFile;
   }
 
@@ -36,6 +36,15 @@ console.log(chalk.blue('Loading tests from:' + testFile));
 const scenarios = require(testFile).scenarios;
 const url = require(testFile).url;
 const name = require(testFile).name;
+
+const user = 'WWF';
+const pass = 'WWF';
+
+const headers = new Map();
+headers.set(
+  'Authorization',
+  `Basic ${new Buffer(`${user}:${pass}`).toString('base64')}`
+);
 
 // Helper functions not (yet) in a module.
 // -----------------------------------------------------------------------------
@@ -59,10 +68,13 @@ const CONTINUE_BUTTON_SELECTOR = '[data-drupal-selector="edit-basket-actions-con
 const SALUTATION_SELECTOR = 'select[data-drupal-selector="edit-your-details-field-title"]';
 const FIRST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-first-name-0-value"]';
 const LAST_NAME_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-last-name-0-value"]';
+const DELIVERY_NAME_SELECTOR = '[data-field-name="fieldDeliverTo"] input';
 const YOB_SELECTOR = '[data-drupal-selector="edit-your-details-field-yob-0-value"]';
 const EMAIL_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-email-address-0-value"]';
 const MOBILE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-mobile-tel-0-value"]';
 const PHONE_SELECTOR = 'input[data-drupal-selector="edit-your-details-field-home-tel-0-value"]';
+const DELIVERY_POSTCODE_SELECTOR ='[data-field-name="fieldRecipientAddressPostcodeInput"] input';
+const DELIVERY_POSTCODE_BUTTON_SELECTOR = '.address-find.button';
 const POSTCODE_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-postcode-input"]';
 const POSTCODE_BUTTON_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-find"]';
 const ADDRESS_DROPDOWN_SELECTOR = '[data-drupal-selector="edit-your-details-field-address-0-address-lookup-elements-address-select"]';
@@ -86,6 +98,10 @@ const NOT_TICKET_SELECTOR = '[data-drupal-selector="edit-gift-aid-giftaid-declar
 const TEST_CARD_NUMBER = '4242424242424242';
 const ORDER_NUMBER_SELECTOR = '.hgroup';
 const PAY_AND_COMPLETE_SELECTOR = '[data-drupal-selector="edit-actions-next"]';
+const TOY_YES_SELECTOR = '[data-field-name="basket136Send"] label';
+const TOY_NO_SELECTOR = '[data-field-name="basket136DoNotSend"] label';
+const GIFT_SELECTOR = '[data-field-name="basketGiftFieldGift"] label';
+
 
 const runScenario = (url, scenario) => {
 
@@ -124,6 +140,11 @@ const runScenario = (url, scenario) => {
       }
     });
 
+    //await page.setExtraHTTPHeaders(headers);
+    await page.authenticate({
+      username: user,
+      password: pass
+    });
     // Go to landing page
     await page.goto(url, {
       waitUntil: 'load',
@@ -140,7 +161,7 @@ const runScenario = (url, scenario) => {
     );
     await page.click(DONATE_BUTTON_SELECTOR);
 
-    console.log('Donation amount submitted.');
+    console.log('Donation amount submitted!');
 
     // wait until the next page in the checkout
     await page.waitForNavigation({
@@ -149,66 +170,39 @@ const runScenario = (url, scenario) => {
     });
     await delayBy(1);
 
-    await page.click(CONTINUE_BUTTON_SELECTOR);
+    //  await page.click(CONTINUE_BUTTON_SELECTOR);
+    //Fill in first page
 
+    try {
+    console.log('hello');
+if (scenario.toy === true){
+  await page.click(TOY_YES_SELECTOR);
+  console.log('yes toy');
+}else {
+  await page.click(TOY_NO_SELECTOR);
+  console.log('no toy');
+}
 
+if (scenario.gift === true){
+  await page.click(GIFT_SELECTOR);
+}else{
+  await page.click(SELF_SELECTOR);
+}
+      //await page.type()
+await page.type(DELIVERY_NAME_SELECTOR, `${scenario.firstName} ${scenario.lastName}`);
+await page.type(DELIVERY_POSTCODE_SELECTOR, scenario.postcode);
+await page.click(DELIVERY_POSTCODE_BUTTON_SELECTOR);
+
+    } catch (error) {
+console.error(error);
+}
     // Go through the test scenario and fill in the first page.
     try {
       await page.type(EMAIL_SELECTOR, scenario.email);
-/*      const frames = page.frames();
-      await frames.forEach(async (frame) => {
-        console.log('Frame found.');
 
-        if (frame.name() === CARDNUMBER_FRAME_NAME) {
-          await frame.evaluate((selector, cardNumber) => {
-            try {
-              document.querySelector(selector).value = cardNumber;
-              //    document.querySelector('select[name="expirymonth"] option[value="11"]').selected = true;
-              //    document.querySelector('select[name="expiryyear"] option[value="27"]').selected = true;
-              //    document.querySelector('input[name="securitycode"]').value = 123;
-              //    document.querySelector('#carddetails').submit();
-              return Promise.resolve();
-            } catch (err) {
-              console.error(err);
-              return Promise.reject();
-            }
-          }, CARDNUMBER_SELECTOR, TEST_CARD_NUMBER);
-        }
-        if (frame.name() === EXPIRY_FRAME_NAME) {
-          await frame.evaluate((selector) => {
-            try {
-
-              document.querySelector(selector).value =
-                '11 / 27';
-
-              return Promise.resolve();
-            } catch (err) {
-              console.error(err);
-              return Promise.reject();
-            }
-          }, CARDNUMBER_SELECTOR);
-        }
-        if (frame.name() === CVC_FRAME_NAME) {
-          await frame.evaluate((selector) => {
-            try {
-
-              document.querySelector(selector).value =
-                '123';
-
-              return Promise.resolve();
-            } catch (err) {
-              console.error(err);
-              return Promise.reject();
-            }
-          }, CARDNUMBER_SELECTOR);
-        }
-
-
-      });
-*/
       await page.select(SALUTATION_SELECTOR, scenario.title);
 
-//      let name = await page.$$(FIRST_NAME_SELECTOR);
+      //      let name = await page.$$(FIRST_NAME_SELECTOR);
       await delayBy(1);
       await page.type(FIRST_NAME_SELECTOR, scenario.firstName);
       await page.type(LAST_NAME_SELECTOR, scenario.lastName);
@@ -227,11 +221,11 @@ const runScenario = (url, scenario) => {
         console.log(find);
         console.log(jQuery(selector).find(find).attr('selected', true));
 
-      }, `${ADDRESS_DROPDOWN_SELECTOR}`, `option:contains("${scenario.address1}")` );
+      }, `${ADDRESS_DROPDOWN_SELECTOR}`, `option:contains("${scenario.address1}")`);
 
       console.log('PAF address selected.');
 
-//await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
+      //await page.select(COUNTRY_DROPDOWN_SELECTOR, scenario.country);
     } catch (error) {
       console.error('Address NOT filled in.');
       console.error(error);
@@ -263,22 +257,22 @@ const runScenario = (url, scenario) => {
       await page.click(PHONE_OI_SELECTOR);
     }
     console.log('Communication options filled in.');
-/*
-    if (scenario.giftAid === true) {
-      await page.click(GIFTAID_SELECTOR);
-    }
+    /*
+        if (scenario.giftAid === true) {
+          await page.click(GIFTAID_SELECTOR);
+        }NOT
 
 
 
-    if (scenario.giftAid === true) {
-    //  await page.click(`#uk_tax_payer`);
-      await page.click(OWN_MONEY_SELECTOR);
-      await page.click(NOT_PROCEEDS_SELECTOR);
-      await page.click(NOT_TICKET_SELECTOR);
-    }
-    console.log('Gift aid done.');
-*/
-  //  await page.hover('[data-drupal-selector="edit-payment-information-add-payment-method-payment-details"]');
+        if (scenario.giftAid === true) {
+        //  await page.click(`#uk_tax_payer`);
+          await page.click(OWN_MONEY_SELECTOR);
+          await page.click(NOT_PROCEEDS_SELECTOR);
+          await page.click(NOT_TICKET_SELECTOR);
+        }
+        console.log('Gift aid done.');
+    */
+    //  await page.hover('[data-drupal-selector="edit-payment-information-add-payment-method-payment-details"]');
 
 
     await page.click(CONTINUE_TO_PAYMENT_SELECTOR);
@@ -290,14 +284,14 @@ const runScenario = (url, scenario) => {
       await page.click(GIFTAID_SELECTOR);
       console.log('doing giftaid');
 
-    //  await page.click(`#uk_tax_payer`);
+      //  await page.click(`#uk_tax_payer`);
       await page.click(OWN_MONEY_SELECTOR);
       await page.click(NOT_PROCEEDS_SELECTOR);
       await page.click(NOT_TICKET_SELECTOR);
     }
     console.log('Gift aid done.');
 
-  //  await page.click(PAY_AND_COMPLETE_SELECTOR);
+    //  await page.click(PAY_AND_COMPLETE_SELECTOR);
 
     await page.waitForNavigation({
       timeOut: 120,
@@ -307,10 +301,10 @@ const runScenario = (url, scenario) => {
 
 
     const number = await page.evaluate((orderNumber) => {
-      let orderNumberRegex = /[\d,-]+/ ;
-      let orderString = document.querySelector(orderNumber).innerText;// document.querySelector('.hgroup').innerText
+      let orderNumberRegex = /[\d,-]+/;
+      let orderString = document.querySelector(orderNumber).innerText; // document.querySelector('.hgroup').innerText
       let matches = orderString.match(orderNumberRegex);
-      return  matches ? matches[0] : null ;
+      return matches ? matches[0] : null;
       //return document.querySelector(ORDER_NUMBER_SELECTOR).innerHTML;
     }, ORDER_NUMBER_SELECTOR);
 
